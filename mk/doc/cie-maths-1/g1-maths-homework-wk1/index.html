@@ -42,7 +42,7 @@
   /* Dấu xuống dòng CHÉP ĐƯỢC giữa hai dòng chữ. Phải nằm TRONG LUỒNG và
      chứa ký tự thật; `font-size:0` để nó không chiếm một pixel nào. Xem
      `doc_view.py` cho ba cách đã thử và trượt. */
-  .chu i.nl { white-space:pre; font-size:0; }
+  .chu i.nl { position:absolute; white-space:pre; font-size:0; }
   .chu span { position:absolute; white-space:pre; color:transparent;
               line-height:1; transform-origin:0 0; }
   .chu span::selection { background:#6366f180; color:transparent; }
@@ -149,14 +149,14 @@
 
 <main data-tra x-show="che === 'doc'" class="px-4 py-4">
 
-<section class="trang" id="tr-1" data-tr="1"><div class="khung"><img src="anh/trang-1.webp" width="993" height="1404" alt="" loading="lazy"><div class="chu"><span data-w="0.23649" style="left:24.996%;top:16.312%;font-size:2.688cqw">Homework Week 1- </span><span data-w="0.26119" style="left:48.656%;top:16.312%;font-size:2.688cqw">Unit 1: Numbers to 100</span><i class="nl">
-</i><span data-w="0.33146" style="left:6.064%;top:21.192%;font-size:2.352cqw">Task 1: Fill in the missing numbers.</span><i class="nl">
-</i><span data-w="0.41838" style="left:6.064%;top:52.308%;font-size:2.352cqw">Task 2: Fill in the table using tens and ones. </span><i class="nl">
-</i><span data-w="0.25025" style="left:6.064%;top:94.224%;font-size:1.848cqw">Complete and return on 25.08.25</span><i class="nl">
-</i><span data-w="0.28052" style="left:41.617%;top:5.665%;font-size:2.520cqw">Cambridge Maths Stage 2</span><i class="nl">
-</i><span data-w="0.48396" style="left:41.617%;top:8.729%;font-size:2.184cqw">Name: ………………………………………………….</span><i class="nl">
-</i><span data-w="0.42827" style="left:41.617%;top:11.390%;font-size:2.184cqw">Class: …………… Date: ……………………… </span></div></div></section>
-<section class="trang" id="tr-2" data-tr="2"><div class="khung"><img src="anh/trang-2.webp" width="993" height="1404" alt="" loading="lazy"><div class="chu"><span data-w="0.73523" style="left:6.064%;top:4.280%;font-size:2.352cqw">Task 3: Practice correct number and letter fromation for numbers one to ten.</span><i class="nl">
+<section class="trang" id="tr-1" data-tr="1"><div class="khung"><img src="anh/trang-1.webp" width="993" height="1404" alt="" loading="lazy"><div class="chu"><span data-w="0.28052" style="left:41.617%;top:5.665%;font-size:2.520cqw">Cambridge Maths Stage 2</span><i class="nl" style="left:41.617%;top:8.729%">
+</i><span data-w="0.48396" style="left:41.617%;top:8.729%;font-size:2.184cqw">Name: ………………………………………………….</span><i class="nl" style="left:41.617%;top:11.390%">
+</i><span data-w="0.42827" style="left:41.617%;top:11.390%;font-size:2.184cqw">Class: …………… Date: ……………………… </span><i class="nl" style="left:24.996%;top:16.312%">
+</i><span data-w="0.23649" style="left:24.996%;top:16.312%;font-size:2.688cqw">Homework Week 1- </span><span data-w="0.26119" style="left:48.656%;top:16.312%;font-size:2.688cqw">Unit 1: Numbers to 100</span><i class="nl" style="left:6.064%;top:21.192%">
+</i><span data-w="0.33146" style="left:6.064%;top:21.192%;font-size:2.352cqw">Task 1: Fill in the missing numbers.</span><i class="nl" style="left:6.064%;top:52.308%">
+</i><span data-w="0.41838" style="left:6.064%;top:52.308%;font-size:2.352cqw">Task 2: Fill in the table using tens and ones. </span><i class="nl" style="left:6.064%;top:94.224%">
+</i><span data-w="0.25025" style="left:6.064%;top:94.224%;font-size:1.848cqw">Complete and return on 25.08.25</span></div></div></section>
+<section class="trang" id="tr-2" data-tr="2"><div class="khung"><img src="anh/trang-2.webp" width="993" height="1404" alt="" loading="lazy"><div class="chu"><span data-w="0.73523" style="left:6.064%;top:4.280%;font-size:2.352cqw">Task 3: Practice correct number and letter fromation for numbers one to ten.</span><i class="nl" style="left:6.064%;top:94.224%">
 </i><span data-w="0.25025" style="left:6.064%;top:94.224%;font-size:1.848cqw">Complete and return on 25.08.25</span></div></div></section>
 </main>
 
@@ -810,7 +810,20 @@
           // Chỉ bắt trong vùng nội dung: bôi đen ở ô tìm kiếm hay thanh chế độ
           // mà cũng hiện nút thì nút chắn mất đúng thứ người ta đang gõ.
           if (!el || !el.closest || !el.closest('[data-tra]')) return;
-          const r = this._noRong(r0);
+          // ⚠ PHẢI nhân bản. `getRangeAt(0)` trả về Range SỐNG của vùng
+          // chọn, nên `setStart`/`setEnd` trong `_noRong` sửa thẳng vùng
+          // người dùng ĐANG kéo — và thao tác đó chuẩn hoá chiều thành xuôi,
+          // tức lật điểm focus từ đầu xuống cuối. Kéo xuôi vô hại (focus vốn
+          // ở cuối); kéo NGƯỢC thì cú kéo tiếp theo tính từ chỗ khác và vùng
+          // chọn co lại. Người dùng báo: "kéo từ trên xuống thì được, từ dưới
+          // lên thì không".
+          //
+          // ⚠ Chuột mô phỏng chạy liền tay KHÔNG tái hiện được: handler chờ
+          // 120ms sau cú di chuyển CUỐI (mỗi `mousemove` gọi `clearTimeout`),
+          // nên nó chỉ chạy sau khi nhả chuột. Phải kéo có khựng >120ms giữa
+          // chừng, đúng nhịp tay người. Đo được: nghỉ 25ms/bước → hai chiều
+          // đều 370 ký tự; nghỉ 200ms/bước → xuống 370, LÊN CÒN 65.
+          const r = this._noRong(r0.cloneRange());
           // Hai bản của cùng một đoạn, cố ý:
           //  · `text`  — đã dồn khoảng trắng, dùng để GỌI API, đo độ dài, tra
           //    glossary và làm khoá lịch sử. Giữ nguyên hành vi cũ.
@@ -888,9 +901,38 @@
         /** Đăng ký nghe vùng chọn. Trang phải TỰ GỌI (trong `init()` hoặc
             `x-init`) — để trong macro mà không gọi thì mọi thứ khác đều dựng
             đúng, nút chỉ đơn giản không bao giờ hiện, và không có lỗi nào. */
+        // Nắn vùng chọn NHÌN THẤY ra biên từ. Trẻ kéo chuột hay thừa/thiếu
+        // vài ký tự ở hai đầu; nắn ra cả từ thì đỡ hẳn thao tác lại.
+        //
+        // ⚠ CHỈ chạy lúc NHẢ chuột, tuyệt đối không giữa lúc kéo. Sửa vùng
+        // chọn đang kéo làm nó chuẩn hoá chiều thành xuôi, tức lật điểm focus
+        // — đó đúng là lỗi "kéo chậm từ dưới lên thì mất vùng chọn" đã phải
+        // sửa bằng `cloneRange()`. Ở đây cú kéo đã xong nên đổi chiều vô hại.
+        //
+        // ⚠ `setTimeout(…, 0)`: để trình duyệt xử lý xong vùng chọn của chính
+        // nó rồi mới đụng vào.
+        //
+        // ⚠ Không đổi gì thì ĐỪNG gọi `addRange`: mỗi lần gọi là một lượt
+        // `selectionchange`, kéo theo một lượt `chonDoi()` vô ích.
+        nanBienTu() {
+          const sel = window.getSelection();
+          if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+          const r0 = sel.getRangeAt(0);
+          const h = r0.commonAncestorContainer;
+          const el = h.nodeType === 3 ? h.parentElement : h;
+          if (!el || !el.closest || !el.closest('[data-tra]')) return;
+          const r = this._noRong(r0.cloneRange());
+          if (r.startContainer === r0.startContainer && r.startOffset === r0.startOffset
+              && r.endContainer === r0.endContainer && r.endOffset === r0.endOffset) return;
+          try { sel.removeAllRanges(); sel.addRange(r); } catch (e) { /* bỏ qua */ }
+        },
+
         traGan() {
           if (typeof document === 'undefined' || this._traDaGan) return;
           this._traDaGan = true;
+          for (const ev of ['mouseup', 'touchend']) {
+            document.addEventListener(ev, () => setTimeout(() => this.nanBienTu(), 0));
+          }
           let hen = null;
           // Gộp nhịp 120ms: kéo chọn trên điện thoại bắn hàng chục lượt mỗi giây.
           // `selectionchange` bắn trên `document` và KHÔNG nổi lên window ở mọi
